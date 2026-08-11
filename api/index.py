@@ -5,13 +5,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route("/")
-def home():
-    return {
-        "message": "Welcome to Maheswaran's Portfolio Backend 🚀"
-    }
-
-
 @app.route("/api")
 def api():
     return {
@@ -40,7 +33,11 @@ def chat():
             "Notes Sharing Web Application and Data Science Project."
         )
 
-    elif "education" in message or "degree" in message or "college" in message:
+    elif (
+        "education" in message
+        or "degree" in message
+        or "college" in message
+    ):
         reply = (
             "Maheswaran completed a B.Tech in Information Technology "
             "from Park College of Engineering and Technology, Coimbatore."
@@ -94,7 +91,11 @@ def chat():
             "Download Resume button in the portfolio."
         )
 
-    elif "hello" in message or "hi" in message or "hey" in message:
+    elif (
+        "hello" in message
+        or "hi" in message
+        or "hey" in message
+    ):
         reply = (
             "Hi 👋 Welcome to Maheswaran's portfolio! "
             "You can ask me about his skills, education, "
