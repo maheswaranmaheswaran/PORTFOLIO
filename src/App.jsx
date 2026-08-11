@@ -165,7 +165,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/chat",
+        "/api/chat",
         {
           method: "POST",
 
@@ -226,7 +226,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/contact",
+  "/api/contact",
         {
           method: "POST",
 
@@ -781,7 +781,7 @@ function App() {
             <div className="timeline-item">
 
               <span>
-                2020 — 2025
+                2021 — 2025
               </span>
 
               <div>
