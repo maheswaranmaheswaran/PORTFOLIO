@@ -4,7 +4,7 @@ import os
 import resend
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)   
 
 # =========================
 # RESEND CONFIGURATION
