@@ -23,6 +23,7 @@ import {
   FaAward,
   FaEnvelope,
   FaHeart,
+  FaInstagram,
 } from "react-icons/fa";
 
 import { MdEmail } from "react-icons/md";
@@ -31,20 +32,42 @@ import { SiMysql, SiDjango, SiVite } from "react-icons/si";
 import profile from "./assets/profile.jpeg";
 
 function App() {
+  // =========================
+  // CHAT STATE
+  // =========================
+
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
 
   const [messages, setMessages] = useState([
     {
       type: "bot",
-      text: "Hello! 👋 I'm Maheswaran's AI portfolio assistant. Ask me about his skills, projects, or experience.",
+      text: "Hello! 👋 I'm Maheswaran's AI portfolio assistant. Ask me about his skills, projects, education, certifications or experience.",
     },
   ]);
 
-  const sendMessage = () => {
+  // =========================
+  // CONTACT STATE
+  // =========================
+
+  const [contactData, setContactData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const [contactStatus, setContactStatus] = useState("");
+  const [contactLoading, setContactLoading] = useState(false);
+
+  // =========================
+  // CHAT FUNCTION
+  // =========================
+
+  const sendMessage = async () => {
     const text = message.trim();
 
-    if (!text) return;
+    if (!text || chatLoading) return;
 
     setMessages((prev) => [
       ...prev,
@@ -55,48 +78,47 @@ function App() {
     ]);
 
     setMessage("");
+    setChatLoading(true);
 
-    setTimeout(() => {
-      let reply =
-        "Thanks for your message! You can contact Maheswaran directly through the Contact section.";
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: text,
+        }),
+      });
 
-      const lower = text.toLowerCase();
-
-      if (
-        lower.includes("skill") ||
-        lower.includes("technology") ||
-        lower.includes("tech")
-      ) {
-        reply =
-          "Maheswaran works with Python, React, JavaScript, HTML, CSS, Bootstrap, MySQL, Git and modern web technologies.";
-      } else if (lower.includes("project")) {
-        reply =
-          "His projects include Real-Time Object Detection using YOLOv4, a Music Web App, Anime Streaming Website and Workforce Administration.";
-      } else if (
-        lower.includes("python") ||
-        lower.includes("developer")
-      ) {
-        reply =
-          "Maheswaran is a Full Stack Python Developer with frontend and backend development skills.";
-      } else if (
-        lower.includes("contact") ||
-        lower.includes("email")
-      ) {
-        reply =
-          "You can reach Maheswaran through the contact section or the email/social links available on this portfolio.";
-      } else if (lower.includes("hello") || lower.includes("hi")) {
-        reply =
-          "Hello! 🚀 Welcome to Maheswaran's portfolio. What would you like to know?";
+      if (!response.ok) {
+        throw new Error("Chat API failed");
       }
+
+      const data = await response.json();
 
       setMessages((prev) => [
         ...prev,
         {
           type: "bot",
-          text: reply,
+          text:
+            data.reply ||
+            "Sorry, I couldn't understand that. Please try again.",
         },
       ]);
-    }, 700);
+    } catch (error) {
+      console.error("Chat error:", error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          text: "⚠️ Backend connection failed. Please try again later.",
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -104,6 +126,71 @@ function App() {
       sendMessage();
     }
   };
+
+  // =========================
+  // CONTACT FORM
+  // =========================
+
+  const handleContactChange = (e) => {
+    setContactData({
+      ...contactData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
+      !contactData.name.trim() ||
+      !contactData.email.trim() ||
+      !contactData.message.trim()
+    ) {
+      setContactStatus("⚠️ Please fill all fields.");
+      return;
+    }
+
+    setContactLoading(true);
+    setContactStatus("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contactData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Contact API failed");
+      }
+
+      const data = await response.json();
+
+      setContactStatus(
+        data.message || "✅ Thank you! Your message has been received."
+      );
+
+      setContactData({
+        name: "",
+        email: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Contact error:", error);
+
+      setContactStatus(
+        "⚠️ Unable to send message. Please try again."
+      );
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  // =========================
+  // SKILLS
+  // =========================
 
   const skills = [
     { name: "Python", icon: <FaPython /> },
@@ -119,6 +206,10 @@ function App() {
     { name: "Database", icon: <FaDatabase /> },
     { name: "Frontend", icon: <FaCode /> },
   ];
+
+  // =========================
+  // PROJECTS
+  // =========================
 
   const projects = [
     {
@@ -151,7 +242,7 @@ function App() {
       title: "Workforce Administration",
       description:
         "Web-based workforce administration system for managing organizational data.",
-      tech: ["Python", "Database", "Web"],
+      tech: ["Python", "React", "AWS"],
     },
     {
       number: "05",
@@ -171,9 +262,29 @@ function App() {
     },
   ];
 
+  // =========================
+  // CERTIFICATIONS
+  // =========================
+
+  const certifications = [
+    "Cisco – Networking Essentials",
+    "EY – Web Technology Full Stack Using Django",
+    "IIE – Full Stack Development (Python)",
+    "Microsoft – Advanced Level Certification",
+    "IBM – Machine Learning with Python",
+    "IBM – Data Science",
+    "NSS – National Service Scheme Certificate",
+  ];
+
+  // =========================
+  // RETURN
+  // =========================
+
   return (
     <div className="portfolio">
+
       {/* SPACE BACKGROUND */}
+
       <div className="stars"></div>
       <div className="stars2"></div>
       <div className="stars3"></div>
@@ -187,8 +298,12 @@ function App() {
       <div className="planet planet-one"></div>
       <div className="planet planet-two"></div>
 
-      {/* NAVBAR */}
+      {/* =========================
+          NAVBAR
+      ========================= */}
+
       <nav className="navbar">
+
         <a href="#home" className="logo">
           MB<span>.</span>
         </a>
@@ -206,16 +321,22 @@ function App() {
           <span></span>
           AVAILABLE
         </div>
+
       </nav>
 
-      {/* HERO */}
+      {/* =========================
+          HERO
+      ========================= */}
+
       <section className="hero" id="home">
+
         <motion.div
           className="hero-content"
           initial={{ opacity: 0, x: -60 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
         >
+
           <div className="system-label">
             <span>●</span> SYSTEM ONLINE
           </div>
@@ -242,6 +363,7 @@ function App() {
           </p>
 
           <div className="hero-buttons">
+
             <a href="#projects" className="btn-primary">
               VIEW PROJECTS <FaArrowRight />
             </a>
@@ -249,11 +371,15 @@ function App() {
             <a href="#contact" className="btn-secondary">
               CONTACT ME
             </a>
+
           </div>
 
+          {/* SOCIAL LINKS */}
+
           <div className="social-icons">
+
             <a
-              href="https://github.com/"
+              href="https://github.com/maheswaranmaheswaran"
               target="_blank"
               rel="noreferrer"
               aria-label="GitHub"
@@ -262,7 +388,7 @@ function App() {
             </a>
 
             <a
-              href="https://linkedin.com/"
+              href="https://linkedin.com/in/i-maheswaran"
               target="_blank"
               rel="noreferrer"
               aria-label="LinkedIn"
@@ -271,14 +397,14 @@ function App() {
             </a>
 
             <a
-              href="mailto:yourmail@example.com"
+              href="mailto:maheswaran2004.b@gmail.com"
               aria-label="Email"
             >
               <MdEmail />
             </a>
 
             <a
-              href="https://wa.me/"
+              href="https://wa.me/917812835200"
               target="_blank"
               rel="noreferrer"
               aria-label="WhatsApp"
@@ -287,26 +413,33 @@ function App() {
             </a>
 
             <a
-              href="mailto:yourmail@example.com"
-              aria-label="Contact"
+              href="https://www.instagram.com/_______.spark._______/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
             >
-              <FaEnvelope />
+              <FaInstagram />
             </a>
+
           </div>
+
         </motion.div>
 
         {/* HERO IMAGE */}
+
         <motion.div
           className="hero-image"
           initial={{ opacity: 0, scale: 0.7 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1 }}
         >
+
           <div className="image-ring ring-one"></div>
           <div className="image-ring ring-two"></div>
           <div className="image-ring ring-three"></div>
 
           <div className="profile-frame">
+
             <img
               src={profile}
               alt="Maheswaran"
@@ -317,6 +450,7 @@ function App() {
             <div className="corner top-right"></div>
             <div className="corner bottom-left"></div>
             <div className="corner bottom-right"></div>
+
           </div>
 
           <div className="floating-tech tech-python">
@@ -330,12 +464,19 @@ function App() {
           <div className="floating-tech tech-code">
             <FaCode />
           </div>
+
         </motion.div>
+
       </section>
 
-      {/* ABOUT */}
+      {/* =========================
+          ABOUT
+      ========================= */}
+
       <section className="section" id="about">
+
         <div className="section-heading">
+
           <span>01</span>
 
           <h2>
@@ -343,9 +484,11 @@ function App() {
           </h2>
 
           <div className="heading-line"></div>
+
         </div>
 
         <div className="about-grid">
+
           <motion.div
             className="about-card"
             whileInView={{ opacity: 1, y: 0 }}
@@ -353,11 +496,13 @@ function App() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
+
             <div className="card-icon">
               <FaUserAstronaut />
             </div>
 
             <div>
+
               <h3>WHO AM I?</h3>
 
               <p>
@@ -376,10 +521,13 @@ function App() {
                 My goal is to continuously improve my development
                 skills and build meaningful real-world applications.
               </p>
+
             </div>
+
           </motion.div>
 
           <div className="stats-grid">
+
             <div className="stat-card">
               <span>EDUCATION</span>
               <strong>B.Tech IT</strong>
@@ -403,13 +551,21 @@ function App() {
               <strong>CHENNAI</strong>
               <small>TAMIL NADU, INDIA</small>
             </div>
+
           </div>
+
         </div>
+
       </section>
 
-      {/* SKILLS */}
+      {/* =========================
+          SKILLS
+      ========================= */}
+
       <section className="section" id="skills">
+
         <div className="section-heading">
+
           <span>02</span>
 
           <h2>
@@ -417,10 +573,13 @@ function App() {
           </h2>
 
           <div className="heading-line"></div>
+
         </div>
 
         <div className="skills-grid">
+
           {skills.map((skill, index) => (
+
             <motion.div
               className="skill-card"
               key={skill.name}
@@ -432,16 +591,27 @@ function App() {
               }}
               viewport={{ once: true }}
             >
+
               {skill.icon}
+
               <span>{skill.name}</span>
+
             </motion.div>
+
           ))}
+
         </div>
+
       </section>
 
-      {/* PROJECTS */}
+      {/* =========================
+          PROJECTS
+      ========================= */}
+
       <section className="section" id="projects">
+
         <div className="section-heading">
+
           <span>03</span>
 
           <h2>
@@ -449,10 +619,13 @@ function App() {
           </h2>
 
           <div className="heading-line"></div>
+
         </div>
 
         <div className="project-grid">
+
           {projects.map((project, index) => (
+
             <motion.div
               className="project-card"
               key={project.number}
@@ -464,6 +637,7 @@ function App() {
               }}
               viewport={{ once: true }}
             >
+
               <div className="project-number">
                 {project.number}
               </div>
@@ -477,79 +651,88 @@ function App() {
               <p>{project.description}</p>
 
               <div className="project-tech">
+
                 {project.tech.map((tech) => (
                   <span key={tech}>{tech}</span>
                 ))}
+
               </div>
 
               <div className="project-arrow">
                 <FaArrowRight />
               </div>
+
             </motion.div>
+
           ))}
+
         </div>
+
       </section>
 
-      {/* CERTIFICATIONS */}
-<section className="section" id="certifications">
+      {/* =========================
+          CERTIFICATIONS
+      ========================= */}
 
-  <div className="section-heading">
-    <span>04</span>
+      <section
+        className="section"
+        id="certifications"
+      >
 
-    <h2>
-      CERTIFICATIONS <b>ACHIEVED</b>
-    </h2>
+        <div className="section-heading">
 
-    <div className="heading-line"></div>
-  </div>
+          <span>04</span>
 
-  <div className="tech-grid">
+          <h2>
+            CERTIFICATIONS <b>ACHIEVED</b>
+          </h2>
 
-    <div className="tech-card">
-      <FaAward />
-      <span>Cisco – Networking Essentials</span>
-    </div>
+          <div className="heading-line"></div>
 
-    <div className="tech-card">
-      <FaAward />
-      <span>EY – Web Technology Full Stack Using Django</span>
-    </div>
+        </div>
 
-    <div className="tech-card">
-      <FaAward />
-      <span>IIE – Full Stack Development (Python)</span>
-    </div>
+        <div className="tech-grid">
 
-    <div className="tech-card">
-      <FaAward />
-      <span>Microsoft – Advanced Level Certification</span>
-    </div>
+          {certifications.map((certificate, index) => (
 
-    <div className="tech-card">
-      <FaAward />
-      <span>IBM – Machine Learning with Python</span>
-    </div>
+            <motion.div
+              className="tech-card"
+              key={certificate}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{
+                once: true,
+                amount: 0.2,
+              }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.1,
+              }}
+            >
 
-    <div className="tech-card">
-      <FaAward />
-      <span>IBM – Data Science</span>
-    </div>
+              <FaAward />
 
-    <div className="tech-card">
-      <FaAward />
-      <span>NSS – National Service Scheme Certificate</span>
-    </div>
+              <span>{certificate}</span>
 
-  </div>
+            </motion.div>
 
-</section>
+          ))}
 
-      {/* CONTACT */}
+        </div>
+
+      </section>
+
+      {/* =========================
+          CONTACT
+      ========================= */}
+
       <section
         className="section mission-section"
         id="contact"
       >
+
         <div className="section-heading">
+
           <span>05</span>
 
           <h2>
@@ -557,10 +740,13 @@ function App() {
           </h2>
 
           <div className="heading-line"></div>
+
         </div>
 
         <div className="mission-box">
+
           <div className="mission-info">
+
             <div className="mission-icon">
               <FaRocket />
             </div>
@@ -576,61 +762,108 @@ function App() {
             </p>
 
             <a
-              href="mailto:yourmail@example.com"
+              href="mailto:maheswaran2004.b@gmail.com"
               className="email-link"
             >
               <MdEmail />
-              yourmail@example.com
+              maheswaran2004.b@gmail.com
             </a>
+
           </div>
 
           <form
             className="contact-form"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleContactSubmit}
           >
+
             <div className="input-group">
+
               <label>NAME</label>
 
               <input
                 type="text"
+                name="name"
+                value={contactData.name}
+                onChange={handleContactChange}
                 placeholder="Enter your name"
               />
+
             </div>
 
             <div className="input-group">
+
               <label>EMAIL</label>
 
               <input
                 type="email"
+                name="email"
+                value={contactData.email}
+                onChange={handleContactChange}
                 placeholder="Enter your email"
               />
+
             </div>
 
             <div className="input-group">
+
               <label>MESSAGE</label>
 
               <textarea
                 rows="5"
+                name="message"
+                value={contactData.message}
+                onChange={handleContactChange}
                 placeholder="Write your message..."
-              ></textarea>
+              />
+
             </div>
 
-            <button className="mission-button" type="submit">
-              SEND MESSAGE
+            <button
+              className="mission-button"
+              type="submit"
+              disabled={contactLoading}
+            >
+
+              {contactLoading
+                ? "SENDING..."
+                : "SEND MESSAGE"}
+
               <FaPaperPlane />
+
             </button>
+
+            {contactStatus && (
+              <div className="contact-status">
+                {contactStatus}
+              </div>
+            )}
+
           </form>
+
         </div>
+
       </section>
 
-      {/* CHAT */}
+      {/* =========================
+          CHATBOT
+      ========================= */}
+
       <div className="chat-widget">
+
         {chatOpen && (
+
           <div className="chat-panel">
+
             <div className="chat-header">
+
               <div>
+
                 <strong>PORTFOLIO AI</strong>
-                <small>● ONLINE ASSISTANT</small>
+
+                <small>
+                  ● ONLINE ASSISTANT
+                </small>
+
               </div>
 
               <button
@@ -639,51 +872,77 @@ function App() {
               >
                 <FaTimes />
               </button>
+
             </div>
 
             <div className="chat-messages">
+
               {messages.map((msg, index) => (
+
                 <div
                   key={index}
                   className={`chat-message ${msg.type}`}
                 >
                   {msg.text}
                 </div>
+
               ))}
+
+              {chatLoading && (
+                <div className="chat-message bot">
+                  Typing...
+                </div>
+              )}
+
             </div>
 
             <div className="chat-input">
+
               <input
                 type="text"
                 placeholder="Ask something..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
+                disabled={chatLoading}
               />
 
               <button
                 onClick={sendMessage}
-                disabled={!message.trim()}
+                disabled={!message.trim() || chatLoading}
               >
                 <FaPaperPlane />
               </button>
+
             </div>
+
           </div>
+
         )}
 
         <button
           className="chat-launcher"
           onClick={() => setChatOpen(!chatOpen)}
         >
+
           {chatOpen ? <FaTimes /> : <FaCode />}
+
           <span className="chat-pulse"></span>
+
         </button>
+
       </div>
 
-      {/* FOOTER */}
+      {/* =========================
+          FOOTER
+      ========================= */}
+
       <footer className="footer">
+
         <div className="footer-top">
+
           <div className="footer-brand">
+
             <a href="#home" className="logo">
               MB<span>.</span>
             </a>
@@ -692,26 +951,34 @@ function App() {
               Full Stack Python Developer building modern,
               responsive and futuristic digital experiences.
             </p>
+
           </div>
 
           <div>
+
             <h4>NAVIGATION</h4>
 
             <div className="footer-links">
+
               <a href="#home">Home</a>
               <a href="#about">About</a>
               <a href="#skills">Skills</a>
               <a href="#projects">Projects</a>
+              <a href="#certifications">Certifications</a>
               <a href="#contact">Contact</a>
+
             </div>
+
           </div>
 
           <div>
+
             <h4>CONNECT</h4>
 
             <div className="footer-social">
+
               <a
-                href="https://github.com/"
+                href="https://github.com/maheswaranmaheswaran"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -719,29 +986,41 @@ function App() {
               </a>
 
               <a
-                href="https://linkedin.com/"
+                href="https://linkedin.com/in/i-maheswaran"
                 target="_blank"
                 rel="noreferrer"
               >
                 <FaLinkedin />
               </a>
 
-              <a href="mailto:yourmail@example.com">
+              <a href="mailto:maheswaran2004.b@gmail.com">
                 <MdEmail />
               </a>
 
               <a
-                href="https://wa.me/"
+                href="https://wa.me/917812835200"
                 target="_blank"
                 rel="noreferrer"
               >
                 <FaWhatsapp />
               </a>
+
+              <a
+                href="https://www.instagram.com/_______.spark._______/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FaInstagram />
+              </a>
+
             </div>
+
           </div>
+
         </div>
 
         <div className="footer-bottom">
+
           <span>
             © 2026 MAHESWARAN B. ALL RIGHTS RESERVED.
           </span>
@@ -749,8 +1028,11 @@ function App() {
           <span>
             MADE WITH <FaHeart /> & CODE
           </span>
+
         </div>
+
       </footer>
+
     </div>
   );
 }
