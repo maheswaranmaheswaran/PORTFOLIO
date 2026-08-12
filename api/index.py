@@ -1,15 +1,23 @@
 from flask import Flask, request
 from flask_cors import CORS
+import os
+import resend
 
 app = Flask(__name__)
 CORS(app)
+
+# =========================
+# RESEND CONFIGURATION
+# =========================
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 
 # =========================
 # API
 # =========================
 
-@app.route("/api")
+@app.route("/api", methods=["GET"])
 def api():
     return {
         "status": "success",
@@ -22,24 +30,24 @@ def api():
 # CHATBOT
 # =========================
 
-@app.route("/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def chat():
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     message = data.get("message", "").lower().strip()
 
     # Skills
     if "skill" in message or "technology" in message:
         reply = (
             "Maheswaran's technical skills include Python, React, "
-            "JavaScript, HTML, CSS, Bootstrap, MySQL, MongoDB, "
-            "AWS, GitHub and Full Stack Web Development."
+            "JavaScript, TypeScript, HTML, CSS, Bootstrap, "
+            "MySQL, MongoDB, AWS, GitHub and Full Stack Web Development."
         )
 
     # Projects
     elif "project" in message:
         reply = (
-            "Maheswaran has worked on projects including "
+            "Maheswaran has worked on several projects including "
             "Real-Time Object Detection using YOLOv4, "
             "Notes Sharing Web Application and Data Science Project."
         )
@@ -139,22 +147,77 @@ def chat():
 # CONTACT FORM
 # =========================
 
-@app.route("/contact", methods=["POST"])
+@app.route("/api/contact", methods=["POST"])
 def contact():
 
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
 
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     message = data.get("message", "").strip()
 
-    print("===== NEW CONTACT MESSAGE =====")
+    print("\n===== NEW CONTACT MESSAGE =====")
     print("Name:", name)
     print("Email:", email)
     print("Message:", message)
-    print("===============================")
+    print("===============================\n")
 
-    return {
-        "status": "success",
-        "message": "Thank you! Your message has been received. 🚀"
-    }
+    # Check required fields
+    if not name or not email or not message:
+        return {
+            "status": "error",
+            "message": "Please fill all fields."
+        }, 400
+
+    # =========================
+    # SEND EMAIL USING RESEND
+    # =========================
+
+    try:
+
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": ["maheswaran2004.b@gmail.com"],
+            "subject": f"Portfolio Contact Message - {name}",
+            "html": f"""
+                <h2>New Portfolio Contact Message</h2>
+
+                <p>
+                    <strong>Name:</strong> {name}
+                </p>
+
+                <p>
+                    <strong>Email:</strong> {email}
+                </p>
+
+                <p>
+                    <strong>Message:</strong>
+                </p>
+
+                <p>
+                    {message}
+                </p>
+
+                <hr>
+
+                <p>
+                    Sent from Maheswaran's Portfolio
+                </p>
+            """
+        })
+
+        print("Email sent successfully!")
+
+        return {
+            "status": "success",
+            "message": "Thank you! Your message has been received. 🚀"
+        }
+
+    except Exception as e:
+
+        print("Email sending error:", str(e))
+
+        return {
+            "status": "error",
+            "message": "Message received, but email could not be sent."
+        }, 500
