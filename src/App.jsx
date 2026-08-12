@@ -190,7 +190,7 @@ function App() {
       {/* NAVBAR */}
       <nav className="navbar">
         <a href="#home" className="logo">
-          MAHES<span>.</span>
+          MB<span>.</span>
         </a>
 
         <div className="nav-links">
@@ -491,68 +491,58 @@ function App() {
       </section>
 
       {/* CERTIFICATIONS */}
-      <section className="section" id="certifications">
-        <div className="section-heading">
-          <span>04</span>
+<section className="section" id="certifications">
 
-          <h2>
-            <b>CERTIFICATIONS</b>
-          </h2>
+  <div className="section-heading">
+    <span>04</span>
 
-          <div className="heading-line"></div>
-        </div>
+    <h2>
+      CERTIFICATIONS <b>ACHIEVED</b>
+    </h2>
 
-        <div className="cert-grid">
-          <div className="cert-card">
-            <div className="cert-icon">
-              <FaAward />
-            </div>
+    <div className="heading-line"></div>
+  </div>
 
-            <div className="cert-content">
-              <span className="cert-label">
-                PROFESSIONAL TRAINING
-              </span>
+  <div className="tech-grid">
 
-              <h3>Full Stack Python Developer</h3>
+    <div className="tech-card">
+      <FaAward />
+      <span>Cisco – Networking Essentials</span>
+    </div>
 
-              <p>
-                Completed professional training focused on
-                frontend, backend and full-stack web development.
-              </p>
+    <div className="tech-card">
+      <FaAward />
+      <span>EY – Web Technology Full Stack Using Django</span>
+    </div>
 
-              <div className="cert-bottom">
-                <span>PYTHON</span>
-                <span>FULL STACK</span>
-              </div>
-            </div>
-          </div>
+    <div className="tech-card">
+      <FaAward />
+      <span>IIE – Full Stack Development (Python)</span>
+    </div>
 
-          <div className="cert-card">
-            <div className="cert-icon">
-              <FaCode />
-            </div>
+    <div className="tech-card">
+      <FaAward />
+      <span>Microsoft – Advanced Level Certification</span>
+    </div>
 
-            <div className="cert-content">
-              <span className="cert-label">
-                DEVELOPMENT
-              </span>
+    <div className="tech-card">
+      <FaAward />
+      <span>IBM – Machine Learning with Python</span>
+    </div>
 
-              <h3>Web Development Skills</h3>
+    <div className="tech-card">
+      <FaAward />
+      <span>IBM – Data Science</span>
+    </div>
 
-              <p>
-                Practical knowledge of React, JavaScript,
-                Bootstrap, HTML, CSS, Python and database
-                technologies.
-              </p>
+    <div className="tech-card">
+      <FaAward />
+      <span>NSS – National Service Scheme Certificate</span>
+    </div>
 
-              <div className="cert-bottom">
-                <span>WEB</span>
-                <span>DEVELOPMENT</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+  </div>
+
+</section>
 
       {/* CONTACT */}
       <section
@@ -695,7 +685,7 @@ function App() {
         <div className="footer-top">
           <div className="footer-brand">
             <a href="#home" className="logo">
-              MAHES<span>.</span>
+              MB<span>.</span>
             </a>
 
             <p>
