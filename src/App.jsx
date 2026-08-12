@@ -164,9 +164,7 @@ function App() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "/api/chat",
-        {
+      const response = await fetch("/api/chat", {
           method: "POST",
 
           headers: {
@@ -194,7 +192,7 @@ function App() {
       ]);
     } catch {
       setMessages((prev) => [
-        ...prev,
+        ...prev,  
         {
           type: "bot",
           text:
@@ -225,9 +223,7 @@ function App() {
     setContactStatus("Sending...");
 
     try {
-      const response = await fetch(
-  "/api/contact",
-        {
+      const response = await fetch("/api/contact", {
           method: "POST",
 
           headers: {
