@@ -21,7 +21,6 @@ import {
   FaRocket,
   FaUserAstronaut,
   FaAward,
-  FaEnvelope,
   FaHeart,
   FaInstagram,
 } from "react-icons/fa";
@@ -32,9 +31,9 @@ import { SiMysql, SiDjango, SiVite } from "react-icons/si";
 import profile from "./assets/profile.jpeg";
 
 function App() {
-  // =========================
+  // =====================================================
   // CHAT STATE
-  // =========================
+  // =====================================================
 
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -47,9 +46,9 @@ function App() {
     },
   ]);
 
-  // =========================
+  // =====================================================
   // CONTACT STATE
-  // =========================
+  // =====================================================
 
   const [contactData, setContactData] = useState({
     name: "",
@@ -60,15 +59,16 @@ function App() {
   const [contactStatus, setContactStatus] = useState("");
   const [contactLoading, setContactLoading] = useState(false);
 
-  // =========================
-  // CHAT FUNCTION
-  // =========================
+  // =====================================================
+  // CHATBOT
+  // =====================================================
 
   const sendMessage = async () => {
     const text = message.trim();
 
     if (!text || chatLoading) return;
 
+    // Add user message immediately
     setMessages((prev) => [
       ...prev,
       {
@@ -91,11 +91,11 @@ function App() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Chat API failed");
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Chat request failed");
+      }
 
       setMessages((prev) => [
         ...prev,
@@ -107,13 +107,13 @@ function App() {
         },
       ]);
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Chat API Error:", error);
 
       setMessages((prev) => [
         ...prev,
         {
           type: "bot",
-          text: "⚠️ Backend connection failed. Please try again later.",
+          text: "⚠️ Unable to connect to the backend right now. Please try again later.",
         },
       ]);
     } finally {
@@ -121,22 +121,33 @@ function App() {
     }
   };
 
+  // =====================================================
+  // CHAT ENTER KEY
+  // =====================================================
+
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   };
 
-  // =========================
-  // CONTACT FORM
-  // =========================
+  // =====================================================
+  // CONTACT INPUT
+  // =====================================================
 
   const handleContactChange = (e) => {
-    setContactData({
-      ...contactData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setContactData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  // =====================================================
+  // CONTACT FORM
+  // =====================================================
 
   const handleContactSubmit = async (e) => {
     e.preventDefault();
@@ -162,14 +173,15 @@ function App() {
         body: JSON.stringify(contactData),
       });
 
-      if (!response.ok) {
-        throw new Error("Contact API failed");
-      }
-
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(data.message || "Contact API failed");
+      }
+
       setContactStatus(
-        data.message || "✅ Thank you! Your message has been received."
+        data.message ||
+          "✅ Thank you! Your message has been received."
       );
 
       setContactData({
@@ -178,7 +190,7 @@ function App() {
         message: "",
       });
     } catch (error) {
-      console.error("Contact error:", error);
+      console.error("Contact API Error:", error);
 
       setContactStatus(
         "⚠️ Unable to send message. Please try again."
@@ -188,9 +200,9 @@ function App() {
     }
   };
 
-  // =========================
+  // =====================================================
   // SKILLS
-  // =========================
+  // =====================================================
 
   const skills = [
     { name: "Python", icon: <FaPython /> },
@@ -207,9 +219,9 @@ function App() {
     { name: "Frontend", icon: <FaCode /> },
   ];
 
-  // =========================
+  // =====================================================
   // PROJECTS
-  // =========================
+  // =====================================================
 
   const projects = [
     {
@@ -262,9 +274,9 @@ function App() {
     },
   ];
 
-  // =========================
+  // =====================================================
   // CERTIFICATIONS
-  // =========================
+  // =====================================================
 
   const certifications = [
     "Cisco – Networking Essentials",
@@ -276,14 +288,16 @@ function App() {
     "NSS – National Service Scheme Certificate",
   ];
 
-  // =========================
+  // =====================================================
   // RETURN
-  // =========================
+  // =====================================================
 
   return (
     <div className="portfolio">
 
-      {/* SPACE BACKGROUND */}
+      {/* =================================================
+          SPACE BACKGROUND
+      ================================================= */}
 
       <div className="stars"></div>
       <div className="stars2"></div>
@@ -298,9 +312,9 @@ function App() {
       <div className="planet planet-one"></div>
       <div className="planet planet-two"></div>
 
-      {/* =========================
+      {/* =================================================
           NAVBAR
-      ========================= */}
+      ================================================= */}
 
       <nav className="navbar">
 
@@ -324,9 +338,9 @@ function App() {
 
       </nav>
 
-      {/* =========================
+      {/* =================================================
           HERO
-      ========================= */}
+      ================================================= */}
 
       <section className="hero" id="home">
 
@@ -397,11 +411,13 @@ function App() {
             </a>
 
             <a
-              href="mailto:maheswaran2004.b@gmail.com"
-              aria-label="Email"
-            >
-              <MdEmail />
-            </a>
+  href="https://mail.google.com/mail/?view=cm&fs=1&to=maheswaran2004.b@gmail.com"
+  target="_blank"
+  rel="noreferrer"
+  aria-label="Gmail"
+>
+  <MdEmail />
+</a>
 
             <a
               href="https://wa.me/917812835200"
@@ -469,9 +485,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           ABOUT
-      ========================= */}
+      ================================================= */}
 
       <section className="section" id="about">
 
@@ -558,9 +574,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           SKILLS
-      ========================= */}
+      ================================================= */}
 
       <section className="section" id="skills">
 
@@ -604,9 +620,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           PROJECTS
-      ========================= */}
+      ================================================= */}
 
       <section className="section" id="projects">
 
@@ -670,9 +686,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           CERTIFICATIONS
-      ========================= */}
+      ================================================= */}
 
       <section
         className="section"
@@ -722,9 +738,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           CONTACT
-      ========================= */}
+      ================================================= */}
 
       <section
         className="section mission-section"
@@ -786,6 +802,7 @@ function App() {
                 value={contactData.name}
                 onChange={handleContactChange}
                 placeholder="Enter your name"
+                disabled={contactLoading}
               />
 
             </div>
@@ -800,6 +817,7 @@ function App() {
                 value={contactData.email}
                 onChange={handleContactChange}
                 placeholder="Enter your email"
+                disabled={contactLoading}
               />
 
             </div>
@@ -814,6 +832,7 @@ function App() {
                 value={contactData.message}
                 onChange={handleContactChange}
                 placeholder="Write your message..."
+                disabled={contactLoading}
               />
 
             </div>
@@ -828,7 +847,7 @@ function App() {
                 ? "SENDING..."
                 : "SEND MESSAGE"}
 
-              <FaPaperPlane />
+              {!contactLoading && <FaPaperPlane />}
 
             </button>
 
@@ -844,9 +863,9 @@ function App() {
 
       </section>
 
-      {/* =========================
+      {/* =================================================
           CHATBOT
-      ========================= */}
+      ================================================= */}
 
       <div className="chat-widget">
 
@@ -909,7 +928,9 @@ function App() {
 
               <button
                 onClick={sendMessage}
-                disabled={!message.trim() || chatLoading}
+                disabled={
+                  !message.trim() || chatLoading
+                }
               >
                 <FaPaperPlane />
               </button>
@@ -923,6 +944,7 @@ function App() {
         <button
           className="chat-launcher"
           onClick={() => setChatOpen(!chatOpen)}
+          aria-label="Open portfolio AI"
         >
 
           {chatOpen ? <FaTimes /> : <FaCode />}
@@ -933,9 +955,9 @@ function App() {
 
       </div>
 
-      {/* =========================
+      {/* =================================================
           FOOTER
-      ========================= */}
+      ================================================= */}
 
       <footer className="footer">
 
@@ -981,6 +1003,7 @@ function App() {
                 href="https://github.com/maheswaranmaheswaran"
                 target="_blank"
                 rel="noreferrer"
+                aria-label="GitHub"
               >
                 <FaGithub />
               </a>
@@ -989,18 +1012,25 @@ function App() {
                 href="https://linkedin.com/in/i-maheswaran"
                 target="_blank"
                 rel="noreferrer"
+                aria-label="LinkedIn"
               >
                 <FaLinkedin />
               </a>
 
-              <a href="mailto:maheswaran2004.b@gmail.com">
-                <MdEmail />
-              </a>
+              <a
+  href="https://mail.google.com/mail/?view=cm&fs=1&to=maheswaran2004.b@gmail.com"
+  target="_blank"
+  rel="noreferrer"
+  aria-label="Gmail"
+>
+  <MdEmail />
+</a>
 
               <a
                 href="https://wa.me/917812835200"
                 target="_blank"
                 rel="noreferrer"
+                aria-label="WhatsApp"
               >
                 <FaWhatsapp />
               </a>
@@ -1009,6 +1039,7 @@ function App() {
                 href="https://www.instagram.com/_______.spark._______/"
                 target="_blank"
                 rel="noreferrer"
+                aria-label="Instagram"
               >
                 <FaInstagram />
               </a>
