@@ -113,24 +113,91 @@ function App() {
   };
 
   const speakAIResponse = (text) => {
-    if (!("speechSynthesis" in window) || !text) return;
+  if (!("speechSynthesis" in window)) {
+    console.log("Speech synthesis is not supported");
+    return;
+  }
 
-    window.speechSynthesis.cancel();
+  // Stop any previous voice
+  window.speechSynthesis.cancel();
 
-    const speech = new SpeechSynthesisUtterance(
-      text.replace(/[*#_`]/g, "").replace(/\n+/g, " ")
+  const cleanText = text
+    .replace(/[*_#`~]/g, "")
+    .replace(/\n+/g, " ")
+    .trim();
+
+  if (!cleanText) return;
+
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+
+    utterance.lang = "en-IN";
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    // Get voices - important for Android Chrome
+    const voices = window.speechSynthesis.getVoices();
+
+    const selectedVoice =
+      voices.find((voice) => voice.lang === "en-IN") ||
+      voices.find((voice) => voice.lang?.startsWith("en-IN")) ||
+      voices.find((voice) => voice.lang?.startsWith("en")) ||
+      voices[0];
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = (event) => {
+      console.log("Voice assistant speech error:", event);
+      setIsSpeaking(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Android Chrome may load voices asynchronously
+  const voices = window.speechSynthesis.getVoices();
+
+  if (voices.length > 0) {
+    speak();
+  } else {
+    const handleVoicesChanged = () => {
+      window.speechSynthesis.removeEventListener(
+        "voiceschanged",
+        handleVoicesChanged
+      );
+
+      speak();
+    };
+
+    window.speechSynthesis.addEventListener(
+      "voiceschanged",
+      handleVoicesChanged
     );
 
-    speech.lang = "en-IN";
-    speech.rate = 0.95;
-    speech.pitch = 1;
+    // Fallback for some Android devices
+    setTimeout(() => {
+      if (!window.speechSynthesis.speaking) {
+        window.speechSynthesis.removeEventListener(
+          "voiceschanged",
+          handleVoicesChanged
+        );
 
-    speech.onstart = () => setIsSpeaking(true);
-    speech.onend = () => setIsSpeaking(false);
-    speech.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(speech);
-  };
+        speak();
+      }
+    }, 500);
+  }
+};
 
   const stopAIResponse = () => {
     window.speechSynthesis?.cancel?.();
