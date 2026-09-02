@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import {
@@ -23,6 +23,12 @@ import {
   FaAward,
   FaHeart,
   FaInstagram,
+  FaMicrophone,
+  FaStop,
+  FaTerminal,
+  FaSearch,
+  FaDownload,
+  FaKeyboard,
 } from "react-icons/fa";
 
 import { MdEmail } from "react-icons/md";
@@ -45,6 +51,198 @@ function App() {
       text: "Hello! 👋 I'm Maheswaran's AI portfolio assistant. Ask me about his skills, projects, education, certifications or experience.",
     },
   ]);
+
+  // =====================================================
+  // ADVANCED PORTFOLIO STATE
+  // =====================================================
+
+  const [booting, setBooting] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [terminalInput, setTerminalInput] = useState("");
+  const [terminalLines, setTerminalLines] = useState([
+    "MB.OS v2.0 — developer terminal ready",
+    'Type "help" to view available commands.',
+  ]);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    const bootTimer = window.setTimeout(() => setBooting(false), 1800);
+
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const scrollHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, progress)));
+    };
+
+    const handleShortcut = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen((prev) => !prev);
+      }
+
+      if (event.key === "Escape") {
+        setCommandOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("keydown", handleShortcut);
+    handleScroll();
+
+    return () => {
+      window.clearTimeout(bootTimer);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("keydown", handleShortcut);
+      recognitionRef.current?.stop?.();
+      window.speechSynthesis?.cancel?.();
+    };
+  }, []);
+
+  const navigateTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    setCommandOpen(false);
+  };
+
+  const speakAIResponse = (text) => {
+    if (!("speechSynthesis" in window) || !text) return;
+
+    window.speechSynthesis.cancel();
+
+    const speech = new SpeechSynthesisUtterance(
+      text.replace(/[*#_`]/g, "").replace(/\n+/g, " ")
+    );
+
+    speech.lang = "en-IN";
+    speech.rate = 0.95;
+    speech.pitch = 1;
+
+    speech.onstart = () => setIsSpeaking(true);
+    speech.onend = () => setIsSpeaking(false);
+    speech.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(speech);
+  };
+
+  const stopAIResponse = () => {
+    window.speechSynthesis?.cancel?.();
+    recognitionRef.current?.stop?.();
+    setIsSpeaking(false);
+    setIsListening(false);
+  };
+
+  const startVoiceAssistant = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          text: "Voice recognition is not supported in this browser. Please use Chrome or Edge, or continue with text chat.",
+        },
+      ]);
+      setChatOpen(true);
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop?.();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setChatOpen(true);
+      setIsListening(true);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+      if (!transcript) return;
+
+      setMessages((prev) => [...prev, { type: "user", text: transcript }]);
+      setChatLoading(true);
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: transcript }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Chat request failed");
+
+        const reply =
+          data.reply || "Sorry, I couldn't understand that. Please try again.";
+
+        setMessages((prev) => [...prev, { type: "bot", text: reply }]);
+        speakAIResponse(reply);
+      } catch (error) {
+        console.error("Voice AI Error:", error);
+        const fallback =
+          "I'm unable to connect to the portfolio assistant right now.";
+        setMessages((prev) => [...prev, { type: "bot", text: fallback }]);
+        speakAIResponse(fallback);
+      } finally {
+        setChatLoading(false);
+      }
+    };
+
+    recognition.start();
+  };
+
+  const runTerminalCommand = (event) => {
+    event.preventDefault();
+    const command = terminalInput.trim().toLowerCase();
+    if (!command) return;
+
+    const outputMap = {
+      help: "Commands: whoami, skills, projects, contact, resume, clear",
+      whoami: "Maheswaran B — Full Stack Python Developer",
+      skills: "Python • React • JavaScript • Django • MySQL • Git • Vite",
+      projects: "6 project modules detected. Opening PROJECTS section...",
+      contact: "Email: maheswaran2004.b@gmail.com | Chennai, Tamil Nadu",
+      resume: "Opening Maheswaran's resume...",
+    };
+
+    if (command === "clear") {
+      setTerminalLines([]);
+      setTerminalInput("");
+      return;
+    }
+
+    const output =
+      outputMap[command] || `Command not found: ${command}. Type "help".`;
+
+    setTerminalLines((prev) => [...prev, `> ${terminalInput}`, output]);
+    setTerminalInput("");
+
+    if (command === "projects") navigateTo("projects");
+    if (command === "contact") navigateTo("contact");
+    if (command === "resume") {
+      window.open("/Maheswaran_Resume.pdf", "_blank", "noopener,noreferrer");
+    }
+  };
 
   // =====================================================
   // CONTACT STATE
@@ -296,6 +494,30 @@ function App() {
     <div className="portfolio">
 
       {/* =================================================
+          ADVANCED BOOT + SCROLL HUD
+      ================================================= */}
+
+      {booting && (
+        <div className="boot-screen">
+          <div className="boot-core">
+            <div className="boot-logo">MB<span>.</span>OS</div>
+            <div className="boot-title">INITIALIZING PORTFOLIO</div>
+            <div className="boot-bar"><span></span></div>
+            <div className="boot-log">
+              <span>&gt; Loading developer interface</span>
+              <span>&gt; Connecting project modules</span>
+              <span>&gt; Initializing portfolio AI</span>
+              <strong>SYSTEM ONLINE</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="scroll-hud" aria-hidden="true">
+        <span style={{ width: `${scrollProgress}%` }}></span>
+      </div>
+
+      {/* =================================================
           SPACE BACKGROUND
       ================================================= */}
 
@@ -330,6 +552,16 @@ function App() {
           <a href="#certifications">CERTIFICATIONS</a>
           <a href="#contact">CONTACT</a>
         </div>
+
+        <button
+          className="command-trigger"
+          type="button"
+          onClick={() => setCommandOpen(true)}
+          title="Open Command Center (Ctrl + K)"
+        >
+          <FaSearch />
+          <span>CTRL K</span>
+        </button>
 
         <div className="nav-status">
           <span></span>
@@ -384,6 +616,15 @@ function App() {
 
             <a href="#contact" className="btn-secondary">
               CONTACT ME
+            </a>
+
+            <a
+              href="/Maheswaran_Resume.pdf"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-resume"
+            >
+              RESUME <FaDownload />
             </a>
 
           </div>
@@ -618,6 +859,52 @@ function App() {
 
         </div>
 
+      </section>
+
+      {/* =================================================
+          DEVELOPER TERMINAL — ADVANCED ADDITION
+      ================================================= */}
+
+      <section className="section terminal-section" id="terminal">
+        <div className="section-heading">
+          <span>SYS</span>
+          <h2>DEVELOPER <b>TERMINAL</b></h2>
+          <div className="heading-line"></div>
+        </div>
+
+        <motion.div
+          className={`dev-terminal ${terminalOpen ? "expanded" : ""}`}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="terminal-topbar">
+            <div className="terminal-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <strong>MAHESWARAN://PORTFOLIO</strong>
+            <button type="button" onClick={() => setTerminalOpen((prev) => !prev)}>
+              <FaTerminal />
+            </button>
+          </div>
+
+          <div className="terminal-body">
+            {terminalLines.map((line, index) => (
+              <div className="terminal-line" key={`${line}-${index}`}>{line}</div>
+            ))}
+
+            <form className="terminal-command" onSubmit={runTerminalCommand}>
+              <span>MB@portfolio:~$</span>
+              <input
+                value={terminalInput}
+                onChange={(e) => setTerminalInput(e.target.value)}
+                placeholder='try "help"'
+                autoComplete="off"
+              />
+            </form>
+          </div>
+        </motion.div>
       </section>
 
       {/* =================================================
@@ -864,6 +1151,50 @@ function App() {
       </section>
 
       {/* =================================================
+          COMMAND CENTER — CTRL + K
+      ================================================= */}
+
+      {commandOpen && (
+        <div className="command-overlay" onMouseDown={() => setCommandOpen(false)}>
+          <motion.div
+            className="command-center"
+            initial={{ opacity: 0, scale: 0.94, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="command-head">
+              <div>
+                <small>MB.OS / NAVIGATION</small>
+                <h3>COMMAND CENTER</h3>
+              </div>
+              <kbd>ESC</kbd>
+            </div>
+
+            <div className="command-search">
+              <FaSearch />
+              <span>Jump anywhere in the portfolio</span>
+              <kbd>CTRL K</kbd>
+            </div>
+
+            <div className="command-grid">
+              <button onClick={() => navigateTo("about")}><FaUserAstronaut /> About Me</button>
+              <button onClick={() => navigateTo("skills")}><FaCode /> Skills</button>
+              <button onClick={() => navigateTo("projects")}><FaRocket /> Projects</button>
+              <button onClick={() => navigateTo("certifications")}><FaAward /> Certifications</button>
+              <button onClick={() => navigateTo("terminal")}><FaTerminal /> Developer Terminal</button>
+              <button onClick={() => { setChatOpen(true); setCommandOpen(false); }}><FaMicrophone /> AI Assistant</button>
+              <button onClick={() => window.open("/Maheswaran_Resume.pdf", "_blank", "noopener,noreferrer")}><FaDownload /> Resume</button>
+              <button onClick={() => navigateTo("contact")}><MdEmail /> Contact</button>
+            </div>
+
+            <div className="command-footer">
+              <FaKeyboard /> Keyboard powered navigation
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* =================================================
           CHATBOT
       ================================================= */}
 
@@ -915,6 +1246,18 @@ function App() {
 
             </div>
 
+            <div className="chat-quick-actions">
+              {["Skills", "Projects", "Education"].map((prompt) => (
+                <button
+                  type="button"
+                  key={prompt}
+                  onClick={() => setMessage(`Tell me about Maheswaran's ${prompt.toLowerCase()}`)}
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
             <div className="chat-input">
 
               <input
@@ -925,6 +1268,27 @@ function App() {
                 onKeyDown={handleKeyDown}
                 disabled={chatLoading}
               />
+
+              <button
+                className={`voice-button ${isListening ? "listening" : ""}`}
+                onClick={isListening ? stopAIResponse : startVoiceAssistant}
+                disabled={chatLoading}
+                type="button"
+                title={isListening ? "Stop listening" : "Voice assistant"}
+              >
+                {isListening ? <FaStop /> : <FaMicrophone />}
+              </button>
+
+              {isSpeaking && (
+                <button
+                  className="voice-stop-button"
+                  onClick={stopAIResponse}
+                  type="button"
+                  title="Stop AI voice"
+                >
+                  <FaStop />
+                </button>
+              )}
 
               <button
                 onClick={sendMessage}

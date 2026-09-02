@@ -1,16 +1,14 @@
-import os
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import resend
+import os
 
+try:
+    import resend
+except ImportError:
+    resend = None
 
-# =========================================================
-# FLASK APP
-# =========================================================
 
 app = Flask(__name__)
-
 CORS(app)
 
 
@@ -24,7 +22,7 @@ RESEND_TO_EMAIL = os.environ.get(
     "maheswaran2004.b@gmail.com"
 )
 
-if RESEND_API_KEY:
+if resend and RESEND_API_KEY:
     resend.api_key = RESEND_API_KEY
 
 
@@ -35,376 +33,415 @@ if RESEND_API_KEY:
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "Welcome to Maheswaran's Portfolio 🚀",
-        "status": "success"
+        "message": "Maheswaran Portfolio Backend is running 🚀",
+        "status": "online"
     })
 
 
 # =========================================================
-# API
+# API STATUS
 # =========================================================
 
 @app.route("/api", methods=["GET"])
-def api():
+def api_status():
     return jsonify({
         "status": "success",
         "developer": "Maheswaran B",
-        "role": "Full Stack Python Developer"
+        "role": "Full Stack Python Developer",
+        "backend": "online"
     })
 
 
 # =========================================================
-# CHATBOT
+# PORTFOLIO AI CHATBOT
 # =========================================================
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
+    try:
+        data = request.get_json(silent=True) or {}
 
-    data = request.get_json(silent=True) or {}
+        message = str(data.get("message", "")).strip().lower()
 
-    message = str(
-        data.get("message", "")
-    ).lower().strip()
+        if not message:
+            return jsonify({
+                "reply": "Please type or say something so I can help you."
+            }), 400
 
-    if not message:
+
+        # -------------------------------------------------
+        # GREETING
+        # -------------------------------------------------
+
+        if any(word in message for word in [
+            "hello",
+            "hi",
+            "hey",
+            "hai"
+        ]):
+            reply = (
+                "Hello! I'm Maheswaran's portfolio AI assistant. "
+                "You can ask me about his skills, projects, education, "
+                "experience, certifications or contact details."
+            )
+
+
+        # -------------------------------------------------
+        # ABOUT
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "about",
+            "who is",
+            "who are",
+            "mahesh",
+            "maheswaran"
+        ]):
+            reply = (
+                "Maheswaran B is a Full Stack Python Developer "
+                "from Chennai, Tamil Nadu. He builds modern, responsive "
+                "and interactive web applications using Python, Django, "
+                "React, JavaScript, databases and cloud technologies."
+            )
+
+
+        # -------------------------------------------------
+        # SKILLS
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "skill",
+            "skills",
+            "technology",
+            "technologies",
+            "tech stack",
+            "stack"
+        ]):
+            reply = (
+                "Maheswaran's technical skills include Python, Java, "
+                "JavaScript, TypeScript, React.js, Django, "
+                "Django REST Framework, HTML5, CSS3, Bootstrap, "
+                "MySQL, SQLite, MongoDB, Git, GitHub, AWS, "
+                "REST APIs, OpenCV and TensorFlow."
+            )
+
+
+        # -------------------------------------------------
+        # PYTHON
+        # -------------------------------------------------
+
+        elif "python" in message:
+            reply = (
+                "Yes. Python is one of Maheswaran's main technologies. "
+                "He uses Python for backend development, Django projects, "
+                "REST APIs and computer vision applications."
+            )
+
+
+        # -------------------------------------------------
+        # REACT
+        # -------------------------------------------------
+
+        elif "react" in message:
+            reply = (
+                "Maheswaran uses React.js to build responsive and "
+                "interactive frontend applications. This portfolio itself "
+                "is built using React and Vite."
+            )
+
+
+        # -------------------------------------------------
+        # DJANGO
+        # -------------------------------------------------
+
+        elif "django" in message:
+            reply = (
+                "Maheswaran has experience with Django and "
+                "Django REST Framework for backend development, "
+                "database-driven applications and REST APIs."
+            )
+
+
+        # -------------------------------------------------
+        # PROJECTS
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "project",
+            "projects",
+            "work",
+            "portfolio project"
+        ]):
+            reply = (
+                "Maheswaran has worked on projects including "
+                "Real-Time Object Detection using YOLOv4, "
+                "Music Web Application using Python and Django, "
+                "Anime Streaming Website, Workforce Administration System, "
+                "and his modern React portfolio."
+            )
+
+
+        # -------------------------------------------------
+        # YOLO
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "yolo",
+            "object detection",
+            "opencv"
+        ]):
+            reply = (
+                "Maheswaran developed a Real-Time Object Detection "
+                "project using YOLOv4, Python and OpenCV. "
+                "The system detects objects from real-time video input "
+                "using computer vision."
+            )
+
+
+        # -------------------------------------------------
+        # EDUCATION
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "education",
+            "college",
+            "degree",
+            "study",
+            "university"
+        ]):
+            reply = (
+                "Maheswaran completed his B.Tech in Information Technology "
+                "from Park College of Engineering and Technology, Coimbatore, "
+                "from 2021 to 2025."
+            )
+
+
+        # -------------------------------------------------
+        # EXPERIENCE
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "experience",
+            "internship",
+            "intern",
+            "company"
+        ]):
+            reply = (
+                "Maheswaran completed a Big Data Full Stack Development "
+                "internship at Marcello Tech, Trichy. "
+                "He worked with Python, Django, REST APIs "
+                "and full-stack web development concepts."
+            )
+
+
+        # -------------------------------------------------
+        # CERTIFICATIONS
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "certificate",
+            "certificates",
+            "certification",
+            "certifications"
+        ]):
+            reply = (
+                "Maheswaran's certifications include Cisco Networking Essentials, "
+                "EY Web Technology Full Stack Using Django, "
+                "IIE Full Stack Development using Python, "
+                "Microsoft Advanced Level Certification, "
+                "IBM Machine Learning with Python, IBM Data Science "
+                "and NSS National Service Scheme certification."
+            )
+
+
+        # -------------------------------------------------
+        # CONTACT
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "contact",
+            "email",
+            "gmail",
+            "phone",
+            "whatsapp",
+            "hire"
+        ]):
+            reply = (
+                "You can contact Maheswaran at "
+                "maheswaran2004.b@gmail.com. "
+                "You can also use the Contact section of this portfolio "
+                "to send him a message."
+            )
+
+
+        # -------------------------------------------------
+        # LOCATION
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "location",
+            "where",
+            "city"
+        ]):
+            reply = (
+                "Maheswaran is based in Chennai, Tamil Nadu, India."
+            )
+
+
+        # -------------------------------------------------
+        # RESUME
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "resume",
+            "cv"
+        ]):
+            reply = (
+                "Maheswaran's resume is available directly from this portfolio. "
+                "Use the Resume button or Command Center to view it."
+            )
+
+
+        # -------------------------------------------------
+        # JOB / ROLE
+        # -------------------------------------------------
+
+        elif any(word in message for word in [
+            "role",
+            "job",
+            "position"
+        ]):
+            reply = (
+                "Maheswaran is focused on Full Stack Python Developer, "
+                "Python Developer, Web Developer and Full Stack Developer roles."
+            )
+
+
+        # -------------------------------------------------
+        # DEFAULT RESPONSE
+        # -------------------------------------------------
+
+        else:
+            reply = (
+                "I can help you learn more about Maheswaran. "
+                "Try asking about his skills, projects, Python experience, "
+                "education, internship, certifications, resume or contact details."
+            )
+
+
         return jsonify({
-            "reply": "Please type a message."
-        }), 400
+            "success": True,
+            "reply": reply
+        })
 
 
-    # -----------------------------------------------------
-    # SKILLS
-    # -----------------------------------------------------
+    except Exception as error:
+        print("Chat error:", error)
 
-    if (
-        "skill" in message
-        or "skills" in message
-        or "technology" in message
-        or "technologies" in message
-    ):
-        reply = (
-            "Maheswaran's technical skills include "
-            "Python, React, JavaScript, TypeScript, HTML, "
-            "CSS, Bootstrap, MySQL, MongoDB, AWS, GitHub "
-            "and Full Stack Web Development."
-        )
-
-
-    # -----------------------------------------------------
-    # PROJECTS
-    # -----------------------------------------------------
-
-    elif (
-        "project" in message
-        or "projects" in message
-    ):
-        reply = (
-            "Maheswaran has worked on projects including "
-            "Real-Time Object Detection using YOLOv4, "
-            "Notes Sharing Web Application and "
-            "Data Science Project."
-        )
-
-
-    # -----------------------------------------------------
-    # EDUCATION
-    # -----------------------------------------------------
-
-    elif (
-        "education" in message
-        or "degree" in message
-        or "college" in message
-        or "study" in message
-    ):
-        reply = (
-            "Maheswaran completed a B.Tech in Information "
-            "Technology from Park College of Engineering "
-            "and Technology, Coimbatore."
-        )
-
-
-    # -----------------------------------------------------
-    # COURSE
-    # -----------------------------------------------------
-
-    elif (
-        "course" in message
-        or "training" in message
-    ):
-        reply = (
-            "Maheswaran completed a Full Stack Python "
-            "Developer course at IIE."
-        )
-
-
-    # -----------------------------------------------------
-    # ABOUT
-    # -----------------------------------------------------
-
-    elif (
-        "about" in message
-        or "who are you" in message
-        or "about you" in message
-    ):
-        reply = (
-            "Maheswaran B is a Full Stack Python Developer "
-            "who enjoys building modern, responsive and "
-            "user-friendly web applications."
-        )
-
-
-    # -----------------------------------------------------
-    # PYTHON
-    # -----------------------------------------------------
-
-    elif "python" in message:
-        reply = (
-            "Maheswaran has Full Stack Python development "
-            "skills and experience working with Python-based "
-            "web applications."
-        )
-
-
-    # -----------------------------------------------------
-    # REACT
-    # -----------------------------------------------------
-
-    elif "react" in message:
-        reply = (
-            "Maheswaran works with React for building "
-            "responsive and interactive frontend applications."
-        )
-
-
-    # -----------------------------------------------------
-    # YOLO
-    # -----------------------------------------------------
-
-    elif (
-        "yolo" in message
-        or "object detection" in message
-    ):
-        reply = (
-            "The main B.Tech project was Real-Time Object "
-            "Detection using YOLOv4 and OpenCV."
-        )
-
-
-    # -----------------------------------------------------
-    # EXPERIENCE
-    # -----------------------------------------------------
-
-    elif (
-        "experience" in message
-        or "work" in message
-    ):
-        reply = (
-            "Maheswaran is focused on Full Stack Python "
-            "development, frontend development and backend "
-            "development."
-        )
-
-
-    # -----------------------------------------------------
-    # CONTACT
-    # -----------------------------------------------------
-
-    elif (
-        "contact" in message
-        or "email" in message
-    ):
-        reply = (
-            "You can use the Contact section of this "
-            "portfolio to connect with Maheswaran."
-        )
-
-
-    # -----------------------------------------------------
-    # RESUME
-    # -----------------------------------------------------
-
-    elif (
-        "resume" in message
-        or "cv" in message
-    ):
-        reply = (
-            "You can download Maheswaran's resume from "
-            "the Resume button in the portfolio."
-        )
-
-
-    # -----------------------------------------------------
-    # GREETING
-    # -----------------------------------------------------
-
-    elif (
-        "hello" in message
-        or message == "hi"
-        or "hey" in message
-        or "good morning" in message
-        or "good evening" in message
-    ):
-        reply = (
-            "Hi 👋 Welcome to Maheswaran's portfolio! "
-            "You can ask me about his skills, education, "
-            "projects, experience or resume."
-        )
-
-
-    # -----------------------------------------------------
-    # DEFAULT
-    # -----------------------------------------------------
-
-    else:
-        reply = (
-            "I can tell you about Maheswaran's skills, "
-            "education, projects, Full Stack Python course, "
-            "experience or resume."
-        )
-
-
-    return jsonify({
-        "reply": reply
-    })
+        return jsonify({
+            "success": False,
+            "reply": "Sorry, the portfolio assistant encountered an error."
+        }), 500
 
 
 # =========================================================
-# CONTACT FORM + RESEND EMAIL
+# CONTACT FORM
 # =========================================================
 
 @app.route("/api/contact", methods=["POST"])
 def contact():
-
-    data = request.get_json(silent=True) or {}
-
-    name = str(
-        data.get("name", "")
-    ).strip()
-
-    email = str(
-        data.get("email", "")
-    ).strip()
-
-    message = str(
-        data.get("message", "")
-    ).strip()
-
-
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
-
-    if not name:
-        return jsonify({
-            "status": "error",
-            "message": "Please enter your name."
-        }), 400
-
-    if not email:
-        return jsonify({
-            "status": "error",
-            "message": "Please enter your email."
-        }), 400
-
-    if not message:
-        return jsonify({
-            "status": "error",
-            "message": "Please enter your message."
-        }), 400
-
-
-    # -----------------------------------------------------
-    # LOCAL LOG
-    # -----------------------------------------------------
-
-    print("\n===== NEW CONTACT MESSAGE =====")
-    print("Name:", name)
-    print("Email:", email)
-    print("Message:", message)
-    print("===============================\n")
-
-
-    # -----------------------------------------------------
-    # CHECK RESEND KEY
-    # -----------------------------------------------------
-
-    if not RESEND_API_KEY:
-        print("WARNING: RESEND_API_KEY is not configured.")
-
-        return jsonify({
-            "status": "success",
-            "message": (
-                "Thank you! Your message has been received. 🚀"
-            )
-        })
-
-
-    # -----------------------------------------------------
-    # SEND EMAIL USING RESEND
-    # -----------------------------------------------------
-
     try:
+        data = request.get_json(silent=True) or {}
 
-        params = {
-            "from": "onboarding@resend.dev",
-            "to": [RESEND_TO_EMAIL],
-            "subject": f"Portfolio Contact - {name}",
-            "reply_to": email,
-            "html": f"""
-                <h2>New Portfolio Contact Message</h2>
+        name = str(data.get("name", "")).strip()
+        email = str(data.get("email", "")).strip()
+        message = str(data.get("message", "")).strip()
 
-                <p>
-                    <strong>Name:</strong>
-                    {name}
-                </p>
 
-                <p>
-                    <strong>Email:</strong>
-                    {email}
-                </p>
+        if not name or not email or not message:
+            return jsonify({
+                "success": False,
+                "message": "Please fill all fields."
+            }), 400
 
-                <hr>
 
-                <p>
-                    <strong>Message:</strong>
-                </p>
+        # -------------------------------------------------
+        # SEND EMAIL USING RESEND
+        # -------------------------------------------------
 
-                <p>
-                    {message}
-                </p>
+        if resend and RESEND_API_KEY:
 
-                <hr>
+            params = {
+                "from": "Portfolio Contact <onboarding@resend.dev>",
+                "to": [RESEND_TO_EMAIL],
+                "subject": f"Portfolio Message from {name}",
+                "reply_to": email,
+                "html": f"""
+                <div
+                    style="
+                        font-family: Arial, sans-serif;
+                        max-width: 600px;
+                        margin: auto;
+                    "
+                >
+                    <h2>New Portfolio Message</h2>
 
-                <p>
-                    Sent from Maheswaran's Portfolio.
-                </p>
-            """
-        }
+                    <p>
+                        <strong>Name:</strong>
+                        {name}
+                    </p>
 
-        result = resend.Emails.send(params)
+                    <p>
+                        <strong>Email:</strong>
+                        {email}
+                    </p>
 
-        print("Resend response:", result)
+                    <p>
+                        <strong>Message:</strong>
+                    </p>
 
+                    <p>
+                        {message}
+                    </p>
+                </div>
+                """
+            }
+
+            resend.Emails.send(params)
+
+            return jsonify({
+                "success": True,
+                "message": "✅ Message sent successfully!"
+            })
+
+
+        # -------------------------------------------------
+        # NO RESEND KEY
+        # -------------------------------------------------
+
+        print("\n====================================")
+        print("PORTFOLIO CONTACT MESSAGE")
+        print("====================================")
+        print("Name:", name)
+        print("Email:", email)
+        print("Message:", message)
+        print("====================================\n")
 
         return jsonify({
-            "status": "success",
+            "success": True,
             "message": (
-                "Thank you! Your message has been received "
-                "and sent successfully. 🚀"
+                "✅ Message received successfully. "
+                "Email service is currently running in development mode."
             )
         })
 
 
     except Exception as error:
-
-        print("RESEND ERROR:", error)
+        print("Contact error:", error)
 
         return jsonify({
-            "status": "error",
-            "message": (
-                "Your message was received, but the email "
-                "could not be sent right now."
-            )
+            "success": False,
+            "message": "Unable to send message. Please try again."
         }), 500
 
 
@@ -413,9 +450,8 @@ def contact():
 # =========================================================
 
 if __name__ == "__main__":
-
     app.run(
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=5000,
         debug=True
     )
